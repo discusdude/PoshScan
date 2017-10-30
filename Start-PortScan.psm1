@@ -188,7 +188,7 @@ function Start-TcpPortScan {
                         Host = $Job.Name
                         OpenPorts = ($Result | Out-String).Trim()
                     }
-                    $ScanResults += New-Object -Type PSObject -Property @ObjectParams
+                    $ScanResults += New-Object -Type PSObject -Property $ObjectParams
                 }
                 Remove-Job -Job $Job
             }
