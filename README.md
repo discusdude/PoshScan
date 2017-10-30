@@ -1,4 +1,9 @@
 # PoshScan
+
+https://github.com/discusdude/PoshScan
+
+Run the program by running Start-PortScan.ps1. Examples are below
+
 ## SYNOPSIS
 Asynchronously scan specified hosts and ports using TCP
 
