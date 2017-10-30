@@ -48,7 +48,7 @@ function Test-TcpPort {
         [Parameter(Mandatory=$true,Position=1)]
         [uint16]$Port
     )
-    $Timeout = 1000
+    $Timeout = 500
     $TcpProbe = New-Object System.Net.Sockets.TcpClient
     $Connection = $TcpProbe.BeginConnect($IpAddress,$Port,$null,$null)  #Initiate asynchronous
                                                                         #connection
@@ -103,7 +103,7 @@ function Invoke-TcpPortScan{
     $ThisFile = "$PSScriptRoot\Start-PortScan.psm1"
     foreach ($p in $Port){
         while((Get-Job).count -ge 5){
-            Start-Sleep 1
+            Start-Sleep -Milliseconds 100
             $CompletedJobs = Get-Job -State Completed
             foreach ($Job in $CompletedJobs){
                 $Result = $Job | Receive-Job
@@ -178,8 +178,7 @@ function Start-TcpPortScan {
     get-job | Remove-Job
     foreach($i in $IpAddress){
         while((Get-Job).count -ge 5){
-            (get-job).count
-            Start-Sleep 1
+            Start-Sleep -Milliseconds 100
             $CompletedJobs = Get-Job -State Completed
             foreach ($Job in $CompletedJobs){
                 $Result = $Job | Receive-Job
@@ -201,6 +200,7 @@ function Start-TcpPortScan {
                 Invoke-TcpPortScan -IpAddress $args[0] -Port $args[1]
             }
         }
+        Write-Verbose "Creating job for $i."
         Start-Job @JobParams | Out-Null
     }
 

@@ -314,7 +314,7 @@ begin {
     
     #---Begin the Scanning-------------------------------------------------------------------------
     if ($Type -eq "Tcp") {
-        $Results = Start-TcpPortScan -IpAddress $ArrayList -Port $Ports
+        $Results = Start-TcpPortScan -IpAddress $ArrayList -Port $Ports -Verbose
     }
 
     #---Prepare for output-------------------------------------------------------------------------
