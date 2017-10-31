@@ -18,7 +18,7 @@
 =================================================================================================#>
 
 function Test-TcpPort {
-<#=================================================================================================
+    <#=================================================================================================
 .SYNOPSIS
     Tests a single TCP port on a single IP address to try to determine if it is open.
     
@@ -43,35 +43,35 @@ function Test-TcpPort {
 =================================================================================================#>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [System.Net.IPAddress]$IpAddress,
-        [Parameter(Mandatory=$true,Position=1)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [uint16]$Port
     )
     $Timeout = 500
     $TcpProbe = New-Object System.Net.Sockets.TcpClient
-    $Connection = $TcpProbe.BeginConnect($IpAddress,$Port,$null,$null)  #Initiate asynchronous
-                                                                        #connection
-    $await = $Connection.AsyncWaitHandle.WaitOne($Timeout,$false)
+    $Connection = $TcpProbe.BeginConnect($IpAddress, $Port, $null, $null)  #Initiate asynchronous
+    #connection
+    $await = $Connection.AsyncWaitHandle.WaitOne($Timeout, $false)
 
-    if(-not $await){
+    if (-not $await) {
         $TcpProbe.Close()
         $false
     }
-    else{
+    else {
         $Connected = $TcpProbe.Connected
         $TcpProbe.Close()
-        if($Connected){
+        if ($Connected) {
             $Port
         }
-        else{
+        else {
             $Connected
         }
     }
 }
 
-function Invoke-TypeScan{
-<#=================================================================================================
+function Invoke-TypeScan {
+    <#=================================================================================================
 .SYNOPSIS
     Asynchronously tests ports on a given Host (specified as an IP address) or performs an ARP
     request.
@@ -115,19 +115,19 @@ function Invoke-TypeScan{
         [String]$Type
     )
     #If arp request, ignore ports
-    if($Type -eq "Arp"){
+    if ($Type -eq "Arp") {
         $Port = 0
     }
     $OutPut = @()
     $ThisFile = "$PSScriptRoot\Start-PortScan.psm1"
-    foreach ($p in $Port){
+    foreach ($p in $Port) {
         #---Wait for jobs to finish if there are more than 5---------------------------------------
-        while((Get-Job).count -ge 5){
+        while ((Get-Job).count -ge 5) {
             Start-Sleep -Milliseconds 100
             $CompletedJobs = Get-Job -State Completed
-            foreach ($Job in $CompletedJobs){
+            foreach ($Job in $CompletedJobs) {
                 $Result = $Job | Receive-Job
-                if($Result){
+                if ($Result) {
                     $OutPut += $Result
                 }
                 Remove-Job -Job $Job
@@ -135,12 +135,12 @@ function Invoke-TypeScan{
         }
 
         #---Craft the appropriate scan type job and start it---------------------------------------
-        switch($Type){
+        switch ($Type) {
             "Tcp" {
                 $JobParams = @{
-                    Name = $p
+                    Name         = $p
                     ArgumentList = @($IpAddress, $p, $ThisFile)
-                    ScriptBlock = {
+                    ScriptBlock  = {
                         Import-Module $args[2]
                         Test-TcpPort -IpAddress $args[0] -Port $args[1]
                     }
@@ -148,9 +148,9 @@ function Invoke-TypeScan{
             }
             "Arp" {
                 $JobParams = @{
-                    Name = "Arp$IPAddress"
+                    Name         = "Arp$IPAddress"
                     ArgumentList = @($IpAddress, $ThisFile)
-                    ScriptBlock = {
+                    ScriptBlock  = {
                         Import-Module $args[1]
                         Send-ArpRequest -IpAddress $args[0]
                     }
@@ -159,9 +159,9 @@ function Invoke-TypeScan{
 
             "Udp" {
                 $JobParams = @{
-                    Name = $p
+                    Name         = $p
                     ArgumentList = @($IpAddress, $p, $ThisFile)
-                    ScriptBlock = {
+                    ScriptBlock  = {
                         Import-Module $args[2]
                         Test-UdpPort -IpAddress $args[0] -Port $args[1]
                     }
@@ -175,22 +175,22 @@ function Invoke-TypeScan{
     #---Wait for all jobs to finish and get results------------------------------------------------
     get-job | Wait-Job | Out-Null
     $CompletedJobs = get-job
-    foreach ($Job in $CompletedJobs){
+    foreach ($Job in $CompletedJobs) {
         $Result = $Job | Receive-Job
-        if($Result){
+        if ($Result) {
             $OutPut += $Result
         }
         Remove-Job -Job $Job
     }
     $Obj = New-Object -Type PSObject -Property @{
-        Type = $Type
+        Type   = $Type
         Output = $OutPut
     }
     $Obj
 }
 
 function Start-TypeScan {
-<#=================================================================================================
+    <#=================================================================================================
 .SYNOPSIS
     Scans a list of ports on a list of IP addresses.
 
@@ -223,10 +223,10 @@ function Start-TypeScan {
     204.79.197.200 80...
 =================================================================================================#>
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [System.Net.IPAddress[]]$IpAddress,
-        [Parameter(Position=1)]
-        [uint16[]]$Port = 80,#@(21,22,23,53,69,71,80,98,110,139,111,389,443,445,1080,1433,2001,2049,
+        [Parameter(Position = 1)]
+        [uint16[]]$Port = 80, #@(21,22,23,53,69,71,80,98,110,139,111,389,443,445,1080,1433,2001,2049,
         #3001,3128,5222,6667,6868,7777,7878,8080,1521,3306,3389,5801,5900,5555,5901)
         [Parameter(Mandatory = $true)]
         [ValidateSet("TCP", "ARP", "UDP")]
@@ -236,17 +236,17 @@ function Start-TypeScan {
     $ScanResults = @()
     get-job | Stop-Job
     get-job | Remove-Job
-    foreach($i in $IpAddress){
+    foreach ($i in $IpAddress) {
         #---Wait for jobs to finish if there are more than 5---------------------------------------
-        while((Get-Job).count -ge 5){
+        while ((Get-Job).count -ge 5) {
             Start-Sleep -Milliseconds 100
             $CompletedJobs = Get-Job -State Completed
-            foreach ($Job in $CompletedJobs){
+            foreach ($Job in $CompletedJobs) {
                 $Result = $Job | Receive-Job
-                if($Result.Output){
+                if ($Result.Output) {
                     $ObjectParams = @{
-                        Host = $Job.Name
-                        "$($Result.Type)Scan" = ($Result.Output | Out-String).Trim()
+                        Host                  = $Job.Name
+                        "$($Result.Type)Result" = ($Result.Output | Out-String).Trim()
                     }
                     $ScanResults += New-Object -Type PSObject -Property $ObjectParams
                 }
@@ -255,9 +255,9 @@ function Start-TypeScan {
         }
         #---Start a new job for the IP Address-----------------------------------------------------
         $JobParams = @{
-            Name = $i
+            Name         = $i
             ArgumentList = @($i, $Port, $ThisFile, $Type)
-            ScriptBlock = {
+            ScriptBlock  = {
                 Import-Module $args[2]
                 Invoke-TypeScan -IpAddress $args[0] -Port $args[1] -Type $args[3]
             }
@@ -269,11 +269,11 @@ function Start-TypeScan {
     #---Wait for all jobs to finish and get results------------------------------------------------
     Get-Job | Wait-Job | Out-Null
     $CompletedJobs = Get-Job
-    foreach ($Job in $CompletedJobs){
+    foreach ($Job in $CompletedJobs) {
         $Result = $Job | Receive-Job
-        if($Result.Output){
+        if ($Result.Output) {
             $ObjectParams = @{
-                Host = $Job.Name
+                Host                    = $Job.Name
                 "$($Result.Type)Result" = ($Result.Output | Out-String).Trim()
             }
             $ScanResults += New-Object -Type PSObject -Property $ObjectParams
@@ -284,7 +284,7 @@ function Start-TypeScan {
 }
 
 function Send-ArpRequest {
-<#=================================================================================================
+    <#=================================================================================================
 .SYNOPSIS
     Performs an Arp Request to obtain a target IP Address's MAC Address.
 
@@ -302,7 +302,7 @@ function Send-ArpRequest {
     AE:3A:32:8B:24:BA
 =================================================================================================#>
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [System.Net.IPAddress]$IpAddress
     )
 
@@ -317,26 +317,27 @@ function Send-ArpRequest {
     $MacTemp = New-Object Byte[] 6
 
     $Return = [Network.Utils]::SendARP($IpAddress.Address, 0, $MacTemp, [Ref]6) #[Ref]6 is MacTemp
-                                                                                #array length.
+    #array length.
     $MacAddress = @()
-    if($Return -eq 0){
-        foreach($Nibble in $MacTemp){
+    if ($Return -eq 0) {
+        foreach ($Nibble in $MacTemp) {
             $MacAddress += $Nibble.tostring('X2')
         }
-        $MacAddress -join(':')
+        $MacAddress -join (':')
     }
-    else{
+    else {
         $false
     }
 }
 
 function Test-UdpPort {
-<#=================================================================================================
+    <#=================================================================================================
 .SYNOPSIS
     Tests a single UDP port on a single IP address to try to determine if it is open.
     
 .DESCRIPTION
-    Tests a single UDP port on a single IP address to try to determine if it is open. It uses a timeout of 500 ms. Returns a bool: true if open and false if closed.
+    Tests a single UDP port on a single IP address to try to determine if it is open. It uses a
+    timeout of 500 ms. Returns a bool: true if open and false if closed.
 
 .PARAMETER IpAddress
     Type: System.Net.IPAddress
@@ -355,9 +356,9 @@ function Test-UdpPort {
 =================================================================================================#>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [System.Net.IPAddress]$IpAddress,
-        [Parameter(Mandatory=$true,Position=1)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [uint16]$Port
     )
     $ErrorActionPreference = "Stop"
@@ -376,18 +377,18 @@ function Test-UdpPort {
     ports are expected to forcibly close. Open ports are expected to timeout. If there is a
     timeout, send a ping to test if the host is up. If it is, consider the port open and return it.
     ---------------------------------------------------------------------------------------------#>
-    $Listener = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any,0)
+    $Listener = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any, 0)
     
-    try{
+    try {
         $UdpProbe.Receive([ref]$Listener)
         $UdpProbe.close()
         $Port
     }
-    catch{
+    catch {
         $UdpProbe.close()
         #---Check if error is due to timeout-------------------------------------------------------
-        if($_ -like "*period of time*"){
-            if(Test-Connection -ComputerName $IpAddress -Count 1 -Quiet){
+        if ($_ -like "*period of time*") {
+            if (Test-Connection -ComputerName $IpAddress -Count 1 -Quiet) {
                 $Port
             }
         }
