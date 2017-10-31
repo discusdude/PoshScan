@@ -61,11 +61,16 @@ function Test-TcpPort {
     else{
         $Connected = $TcpProbe.Connected
         $TcpProbe.Close()
-        $Connected
+        if($Connected){
+            $Port
+        }
+        else{
+            $Connected
+        }
     }
 }
 
-function Invoke-TcpPortScan{
+function Invoke-TypeScan{
 <#=================================================================================================
 .SYNOPSIS
     Asynchronously tests ports on a given Host (specified as an IP address)
@@ -93,13 +98,20 @@ function Invoke-TcpPortScan{
 =================================================================================================#>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [System.Net.IPAddress]$IpAddress,
-        [Parameter(Position=1)]
-        [uint16[]]$Port = 80#@(21,22,23,53,69,71,80,98,110,139,111,389,443,445,1080,1433,2001,2049,
+        [Parameter(Position = 1)]
+        [uint16[]]$Port = 80, #@(21,22,23,53,69,71,80,98,110,139,111,389,443,445,1080,1433,2001,2049,
         #3001,3128,5222,6667,6868,7777,7878,8080,1521,3306,3389,5801,5900,5555,5901)
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("TCP", "ARP")]
+        [String]$Type
     )
-    $OpenPorts = @()
+    #If arp request, ignore ports
+    if($Type -eq "Arp"){
+        $Port = 0
+    }
+    $OutPut = @()
     $ThisFile = "$PSScriptRoot\Start-PortScan.psm1"
     foreach ($p in $Port){
         while((Get-Job).count -ge 5){
@@ -108,19 +120,36 @@ function Invoke-TcpPortScan{
             foreach ($Job in $CompletedJobs){
                 $Result = $Job | Receive-Job
                 if($Result){
-                    $OpenPorts += $Job.Name
+                    $OutPut += $Result
                 }
                 Remove-Job -Job $Job
             }
         }
-        $JobParams = @{
-            Name = $p
-            ArgumentList = @($IpAddress, $p, $ThisFile)
-            ScriptBlock = {
-                Import-Module $args[2]
-                Test-TcpPort -IpAddress $args[0] -Port $args[1]
+
+        switch($Type){
+            "Tcp" {
+                $JobParams = @{
+                    Name = $p
+                    ArgumentList = @($IpAddress, $p, $ThisFile)
+                    ScriptBlock = {
+                        Import-Module $args[2]
+                        Test-TcpPort -IpAddress $args[0] -Port $args[1]
+                    }
+                }
+            }
+            "Arp" {
+                $JobParams = @{
+                    Name = "Arp$IPAddress"
+                    ArgumentList = @($IpAddress, $ThisFile)
+                    ScriptBlock = {
+                        Import-Module $args[1]
+                        Send-ArpRequest -IpAddress $args[0]
+                    }
+                }
             }
         }
+
+        
         Start-Job @JobParams | Out-Null
     }
     
@@ -129,15 +158,18 @@ function Invoke-TcpPortScan{
     foreach ($Job in $CompletedJobs){
         $Result = $Job | Receive-Job
         if($Result){
-            $OpenPorts += $Job.Name
+            $OutPut += $Result
         }
         Remove-Job -Job $Job
     }
-
-    $OpenPorts
+    $Obj = New-Object -Type PSObject -Property @{
+        Type = $Type
+        Output = $OutPut
+    }
+    $Obj
 }
 
-function Start-TcpPortScan {
+function Start-TypeScan {
 <#=================================================================================================
 .SYNOPSIS
     Scans a list of ports on a list of IP addresses.
@@ -169,8 +201,11 @@ function Start-TcpPortScan {
         [Parameter(Mandatory=$true,Position=0)]
         [System.Net.IPAddress[]]$IpAddress,
         [Parameter(Position=1)]
-        [uint16[]]$Port = 80#@(21,22,23,53,69,71,80,98,110,139,111,389,443,445,1080,1433,2001,2049,
+        [uint16[]]$Port = 80,#@(21,22,23,53,69,71,80,98,110,139,111,389,443,445,1080,1433,2001,2049,
         #3001,3128,5222,6667,6868,7777,7878,8080,1521,3306,3389,5801,5900,5555,5901)
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("TCP", "ARP")]
+        [String]$Type
     )
     $ThisFile = "$PSScriptRoot\Start-PortScan.psm1"
     $ScanResults = @()
@@ -185,7 +220,7 @@ function Start-TcpPortScan {
                 if($Result){
                     $ObjectParams = @{
                         Host = $Job.Name
-                        OpenPorts = ($Result | Out-String).Trim()
+                        "$($Result.Type)Scan" = ($Result.Output | Out-String).Trim()
                     }
                     $ScanResults += New-Object -Type PSObject -Property $ObjectParams
                 }
@@ -194,10 +229,10 @@ function Start-TcpPortScan {
         }
         $JobParams = @{
             Name = $i
-            ArgumentList = @($i, $Port, $ThisFile)
+            ArgumentList = @($i, $Port, $ThisFile, $Type)
             ScriptBlock = {
                 Import-Module $args[2]
-                Invoke-TcpPortScan -IpAddress $args[0] -Port $args[1]
+                Invoke-TypeScan -IpAddress $args[0] -Port $args[1] -Type $args[3]
             }
         }
         Write-Verbose "Creating job for $i."
@@ -211,11 +246,51 @@ function Start-TcpPortScan {
         if($Result){
             $ObjectParams = @{
                 Host = $Job.Name
-                OpenPorts = ($Result | Out-String).Trim()
+                "$($Result.Type)Results" = ($Result.Output | Out-String).Trim()
             }
             $ScanResults += New-Object -Type PSObject -Property $ObjectParams
         }
         Remove-Job -Job $Job
     }
     $ScanResults
+}
+
+function Send-ArpRequest {
+<#=================================================================================================
+.SYNOPSIS
+
+.DESCRIPTION
+
+.PARAMETER IpAddress
+
+.Example
+
+=================================================================================================#>
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [System.Net.IPAddress]$IpAddress
+    )
+
+    $NetTools = @" 
+    [DllImport("iphlpapi.dll", ExactSpelling=true)] 
+       public static extern int SendARP(  
+           uint DestIP, uint SrcIP, byte[] pMacAddr, ref int PhyAddrLen); 
+"@
+
+    #---Import the SendARP function from iphelper dll----------------------------------------------
+    Add-Type -MemberDefinition $NetTools -Name Utils -Namespace Network
+    $MacTemp = New-Object Byte[] 6
+
+    $Return = [Network.Utils]::SendARP($IpAddress.Address, 0, $MacTemp, [Ref]6) #[Ref]6 is MacTemp
+                                                                                #array length.
+    $MacAddress = @()
+    if($Return -eq 0){
+        foreach($Nibble in $MacTemp){
+            $MacAddress += $Nibble.tostring('X2')
+        }
+        $MacAddress -join(':')
+    }
+    else{
+        $false
+    }
 }

@@ -95,7 +95,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("TCP")]
+    [ValidateSet("TCP","ARP")]
     [String]$Type = "TCP",
     [Parameter()]
     [String]$StartAddress,
@@ -313,9 +313,9 @@ begin {
     
     
     #---Begin the Scanning-------------------------------------------------------------------------
-    if ($Type -eq "Tcp") {
-        $Results = Start-TcpPortScan -IpAddress $ArrayList -Port $Ports -Verbose
-    }
+
+    $Results = Start-TypeScan -IpAddress $ArrayList -Port $Ports -Type $Type -Verbose
+
 
     #---Prepare for output-------------------------------------------------------------------------
     $File = get-date -Format "yyyy-MM-dd.hh.mm.ss"
