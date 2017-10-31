@@ -5,7 +5,8 @@ https://github.com/discusdude/PoshScan
 Run the program by running Start-PortScan.ps1. Examples are below
 
 ## SYNOPSIS
-Asynchronously scan specified hosts and ports using TCP
+Asynchronously scan specified hosts and ports using TCP, or UDP.  Alternatively, can perform
+an ARP request.
 
 ## DESCRIPTION
 Takes input either as a text file, IP address range via CIDR notation, or a start address and
@@ -14,13 +15,15 @@ address for a total of 25 simultaneous ports. It will then display PSObject resu
 the results as html, csv, xml, or json depending on the specified result type. It will only
 include hosts responded on a port.
 
+It can perform either TCP or UDP port scans or can perform an ARP scan.
+
 The functions that it uses are located in the Start-PortScan.psm1 file.
 
 ## PARAMETER Type
 Type: String
 
-In a future version, this will specify the type of scan to be performed (ICMP, TCP, UDP, ARP)
-and will be constrained to those options. Currenlty, TCP is the only valid option.
+This specifies the type of scan to be performed (TCP, UDP, ARP) is constrained to those
+options.
 
 ## PARAMETER StartAddress
 Type: String
@@ -110,4 +113,13 @@ Host           ARPResult
 ----           ---------
 192.168.111.1  AB:CD:EF:12:34:56
 192.168.123.6  AB:CD:EF:12:34:55
+```
+
+## EXAMPLE
+```
+Start-PortScan -InputFile .\address.txt -Type UDP -Ports 3389, 44, 2342, 23423
+
+Host           UDPResults
+----           ----------
+192.168.111.1  3389
 ```
