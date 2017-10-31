@@ -241,8 +241,8 @@ begin {
                 }
             }
             $NetAddress = $Octets[$PartialOctet - 1] -band $OctetMask
-            #At this point, zero out the unnecessary octets and define first address. Then find the end
-            #address.
+            #At this point, zero out the unnecessary octets and define first address. Then find the
+            #end address.
 
             $OctetSlider = $PartialOctet                        #Slider for Octet array indexes
             [int]$Octets[$PartialOctet - 1] = $NetAddress

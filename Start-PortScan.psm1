@@ -18,7 +18,7 @@
 =================================================================================================#>
 
 function Test-TcpPort {
-    <#=================================================================================================
+<#=================================================================================================
 .SYNOPSIS
     Tests a single TCP port on a single IP address to try to determine if it is open.
     
@@ -71,7 +71,7 @@ function Test-TcpPort {
 }
 
 function Invoke-TypeScan {
-    <#=================================================================================================
+<#=================================================================================================
 .SYNOPSIS
     Asynchronously tests ports on a given Host (specified as an IP address) or performs an ARP
     request.
@@ -190,7 +190,7 @@ function Invoke-TypeScan {
 }
 
 function Start-TypeScan {
-    <#=================================================================================================
+<#=================================================================================================
 .SYNOPSIS
     Scans a list of ports on a list of IP addresses.
 
@@ -262,7 +262,7 @@ function Start-TypeScan {
                 Invoke-TypeScan -IpAddress $args[0] -Port $args[1] -Type $args[3]
             }
         }
-        Write-Verbose "Creating job for $i."
+        Write-Verbose "Initiating $Type scan for $i."
         Start-Job @JobParams | Out-Null
     }
 
@@ -284,7 +284,7 @@ function Start-TypeScan {
 }
 
 function Send-ArpRequest {
-    <#=================================================================================================
+<#=================================================================================================
 .SYNOPSIS
     Performs an Arp Request to obtain a target IP Address's MAC Address.
 
@@ -331,7 +331,7 @@ function Send-ArpRequest {
 }
 
 function Test-UdpPort {
-    <#=================================================================================================
+<#=================================================================================================
 .SYNOPSIS
     Tests a single UDP port on a single IP address to try to determine if it is open.
     
