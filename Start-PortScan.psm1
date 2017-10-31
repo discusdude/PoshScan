@@ -73,11 +73,13 @@ function Test-TcpPort {
 function Invoke-TypeScan{
 <#=================================================================================================
 .SYNOPSIS
-    Asynchronously tests ports on a given Host (specified as an IP address)
+    Asynchronously tests ports on a given Host (specified as an IP address) or performs an ARP
+    request.
 
 .DESCRIPTION
-    Asynchronously calls Test-TcpPort to test the supplied ports on a single IP Address. It returns
-    the port number if it is open and ommits it if it is closed.
+    Asynchronously calls the appropriate scan type to test the supplied ports or perform an ARP
+    query on a single IP Address. If a connection fails, nothing is returned. Otherwise, it returns
+    the result of function it calls.
 
 .PARAMETER IpAddress
     Type: System.Net.IPAddress
@@ -88,6 +90,11 @@ function Invoke-TypeScan{
     Type: uint16[]
 
     A unint16 array of ports to be scanned.
+
+.PARAMETER Type
+    Type: String
+
+    A value constrained string declaring which type of scan to perform
 
 .Example
     Invoke-TcpPortScan -IPAddress 204.79.197.200 -Port 80, 443
@@ -175,8 +182,8 @@ function Start-TypeScan {
     Scans a list of ports on a list of IP addresses.
 
 .DESCRIPTION
-    Scans a list of IP addresses and ports by asynchronously calling Invoke-TcpPortScan. It returns
-    an object with the hosts' IP address and open ports.
+    Scans a list of IP addresses and ports by asynchronously calling Invoke-TypeScan. It returns
+    an object with the hosts' IP address and open ports or MAC Address.
 
 .PARAMETER IpAddress
     Type: System.Net.IPAddress[]
@@ -187,6 +194,11 @@ function Start-TypeScan {
     Type: uint16[]
 
     An array of ports to be tested
+
+.PARAMETER Type
+    Type: String
+
+    A value constrained string declaring which type of scan to perform
 
 .Example
 
@@ -258,13 +270,20 @@ function Start-TypeScan {
 function Send-ArpRequest {
 <#=================================================================================================
 .SYNOPSIS
+    Performs an Arp Request to obtain a target IP Address's MAC Address.
 
 .DESCRIPTION
+    Performs an Arp Request to obtain a target IP Address's MAC Address.
 
 .PARAMETER IpAddress
+    Type: System.Net.IPAddress
+
+    The address of the target host.
 
 .Example
+    Send-ArpRequest -IpAddress 192.168.5.6
 
+    AE:3A:32:8B:24:BA
 =================================================================================================#>
     param(
         [Parameter(Mandatory=$true,Position=0)]
