@@ -2,7 +2,8 @@
 
 https://github.com/discusdude/PoshScan
 
-Run the program by running Start-PortScan.ps1. Examples are below
+Run the program by running Start-PortScan.ps1. It requires both the ps1 and psm1 files in the
+same directory. Examples are below
 
 ## SYNOPSIS
 Asynchronously scan specified hosts and ports using TCP, or UDP.  Alternatively, can perform
