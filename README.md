@@ -66,8 +66,8 @@ The path to a .txt or .csv file containing the IP addresses to scan. Will overri
 ```
 Start-PortScan -StartAddress 192.168.2.0 -EndAddress 192.168.3.0 -Port 80, 443
 
-Host           TCPResults
-----           ----------
+Host           TCPResult
+----           ---------
 192.168.2.15   80, 443
 192.168.2.16   80, 443
 192.168.2.26   80
@@ -78,8 +78,8 @@ Host           TCPResults
 ```
 Start-PortScan -StartAddress 192.168.2.5/24 -Port 80, 443
 
-Host           TCPResults
-----           ----------
+Host           TCPResult
+----           ---------
 192.168.2.15   80, 443
 192.168.2.16   80, 443
 192.168.2.26   80
@@ -90,8 +90,8 @@ Host           TCPResults
 ```
 Start-PortScan -InputFile .\address.txt -Port 80,443 -Type tcp
 
-Host           TCPResults
-----           ----------
+Host           TCPResult
+----           ---------
 128.187.16.99  80, 443
 204.79.197.200 80, 443
 ```
@@ -106,8 +106,8 @@ This will create an HTML document in the current working directory with a table 
 ```
 Start-PortScan -InputFile .\address.txt -Type ARP
 
-Host           ARPResults
-----           ----------
+Host           ARPResult
+----           ---------
 192.168.111.1  AB:CD:EF:12:34:56
 192.168.123.6  AB:CD:EF:12:34:55
 ```

@@ -20,11 +20,11 @@
 function Test-TcpPort {
 <#=================================================================================================
 .SYNOPSIS
-    Tests a single port on a single IP address to try to determine if it is open.
+    Tests a single TCP port on a single IP address to try to determine if it is open.
     
 .DESCRIPTION
-    Tests a single port on a single IP address to try to determine if it is open. It uses a timout
-    of 1 second. Returns a bool: true if open and false if closed.
+    Tests a single TCP port on a single IP address to try to determine if it is open. It uses a 
+    timeout of 500 ms. Returns a bool: true if open and false if closed.
 
 .PARAMETER IpAddress
     Type: System.Net.IPAddress
@@ -258,7 +258,7 @@ function Start-TypeScan {
         if($Result){
             $ObjectParams = @{
                 Host = $Job.Name
-                "$($Result.Type)Results" = ($Result.Output | Out-String).Trim()
+                "$($Result.Type)Result" = ($Result.Output | Out-String).Trim()
             }
             $ScanResults += New-Object -Type PSObject -Property $ObjectParams
         }
@@ -312,4 +312,29 @@ function Send-ArpRequest {
     else{
         $false
     }
+}
+
+function Test-UdpPort {
+<#=================================================================================================
+.SYNOPSIS
+    Tests a single UDP port on a single IP address to try to determine if it is open.
+    
+.DESCRIPTION
+    Tests a single UDP port on a single IP address to try to determine if it is open. It uses a timeout of 500 ms. Returns a bool: true if open and false if closed.
+
+.PARAMETER IpAddress
+    Type: System.Net.IPAddress
+
+    The IP address of the host with the port to be tested.
+
+.PARAMETER Port
+    Type: uint16
+
+    The Port that is going to be tested
+
+.Example
+    Test-TcpPort -IPAddress 127.0.0.1 -Port 80
+
+    true
+=================================================================================================#>
 }
